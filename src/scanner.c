@@ -210,7 +210,10 @@ bool scan_sc(FILE* f) {
 
 // Multi line comment
 bool scan_mc(FILE* f) {
-
+  static const char* mc_opening_symbol = "/*";
+  static const char* mc_closing_symbol = "*/";
+  char buf[strlen(mc_opening_symbol) + 1];
+  memset(buf, 0x00, sizeof(buf));
 }
 
 

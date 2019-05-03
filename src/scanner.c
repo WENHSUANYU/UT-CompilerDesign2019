@@ -20,14 +20,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "token.h"
 
+#define IDEN_MAX_LEN 32
+#define REWD_MAX_LEN 9
+#define INTE_MAX_LEN 12
 
-int fpeek(FILE* f) {
+char fpeek(FILE* f) {
   char c = fgetc(f);
   ungetc(c, f);
   return c;
+}
+
+void ungets(char* s, FILE* f) {
+  for (int i = strlen(s) - 1; i >= 0; i--) {
+    ungetc(s[i], f);
+  }
 }
 
 
@@ -47,6 +57,7 @@ bool is_underscore(char c) {
   return c == '_';
 }
 
+
 // Identifier
 bool scan_iden(FILE* f) {
   // 第一個字必須是英文字母或底線字元
@@ -54,8 +65,9 @@ bool scan_iden(FILE* f) {
   char c = fpeek(f);
 
   if (is_alphabet(c) || is_underscore(c)) {
-    char str[32] = {0};
+    char str[IDEN_MAX_LEN] = {0};
     size_t current = 0;
+
     // Advance cursor
     do {
       c = fgetc(f);
@@ -66,7 +78,7 @@ bool scan_iden(FILE* f) {
     ungetc(c, f);
     str[current - 1] = 0x00;
     //printf("current offset: %ld\t", ftell(f));
-    printf("IDEN\t%s\n", str);
+    printf("IDEN:%s\n", str);
     return true;
   } else {
     return false;
@@ -75,15 +87,46 @@ bool scan_iden(FILE* f) {
 
 // Reserved word
 bool scan_rewd(FILE* f) {
+  static const char rewds[25][REWD_MAX_LEN] = {
+    "if", "else", "while", "for", "do", "switch", "case", "default",
+    "continue", "int", "float", "double", "char", "break", "static",
+    "extern", "auto", "register", "sizeof", "union", "struct", "enum",
+    "return", "goto", "const"
+  };
+  static const size_t rewds_size = sizeof(rewds) / sizeof(rewds[0]);
+  //printf("rewd array size: %ld\n", rewds_size);
   
+  for (size_t i = 0; i < rewds_size; i++) {
+    const char* rewd = rewds[i];
+    size_t rewd_size = strlen(rewd);
+
+    char buf[rewd_size + 1];
+    memset(buf, 0x00, sizeof(char) * sizeof(buf));
+
+    if (!fgets(buf, rewd_size + 1, f)) {
+      // EOF will fail to fgets anymore
+      return false;
+    }
+
+   
+    if (!strcmp(buf, rewd)) {
+      printf("REWD:%s\n", buf);
+      return true;
+    } else {
+      ungets(buf, f);
+    }
+  }
+  return false;
 }
 
+// Integer
 bool scan_inte(FILE* f) {
   char c = fpeek(f);
 
   if (is_digit(c)) {
-    char str[12] = {0};
+    char str[INTE_MAX_LEN] = {0};
     size_t current = 0;
+
     // Advance cursor
     do {
       c = fgetc(f);
@@ -93,7 +136,7 @@ bool scan_inte(FILE* f) {
     // Backtrack
     ungetc(c, f);
     str[current - 1] = 0x00;
-    printf("INTE\t%s\n", str);
+    printf("INTE:%s\n", str);
     return true;
   } else {
     return false;
@@ -105,7 +148,7 @@ bool scan_spec(FILE* f) {
   char c = fpeek(f);
 
   if (c == '{' || c == '}' || c == '(' || c ==')' || c ==';') {
-    printf("SPEC\t%c\n", c);
+    printf("SPEC:%c\n", c);
     fgetc(f);
     return true;
   } else {
@@ -115,10 +158,13 @@ bool scan_spec(FILE* f) {
 
 
 bool get_next_token(FILE* f) {
-  bool result = scan_iden(f);
+  bool result = scan_spec(f);
   if (result) return true;
 
-  result = scan_spec(f);
+  result = scan_rewd(f);
+  if (result) return true;
+  
+  result = scan_iden(f);
   if (result) return true;
 
   result = scan_inte(f);

@@ -4,17 +4,17 @@
 // 
 // scanner.c converts a sequence of characters into a sequence of tokens.
 //
-// It contains various functions to get the next token from the input stream
-// (istream for abbreviation in the following context). For each token class,
+// It contains various functions to get the next token from the input file stream
+// (ifstream for abbreviation in the following context). For each token class,
 // there's a dedicated tokenizing function.
 //
 // During tokenization, if current character is accepted, then we advance
-// istream's position by one char. If not accepted, we keep backtracking
-// istream's position by one char until it reaches the original postion
+// ifstream's position by one char. If not accepted, we keep backtracking
+// ifstream's position by one char until it reaches the original postion
 // or an accepted state is reached.
 //
-// In order to get the next token from istream, we'll try all tokenizing functions
-// one by one. If after executing a tokenizing function, the position of istream
+// In order to get the next token from ifstream, we'll try all tokenizing functions
+// one by one. If after executing a tokenizing function, the position of ifstream
 // remains the same, then we'll try another one until all functions have been tried.
  
 #include <stdio.h>
@@ -22,12 +22,12 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "token.h"
-
 #define IDEN_MAX_LEN 32
 #define REWD_MAX_LEN 9
 #define INTE_MAX_LEN 12
 #define OPER_MAX_LEN 3
+#define SC_MAX_LEN 256
+#define MC_MAX_LEN 256
 
 char fpeek(FILE* f) {
   char c = fgetc(f);
@@ -42,8 +42,12 @@ void ungets(char* s, FILE* f) {
 }
 
 
+bool is_newline(char c) {
+  return c == 0xd || c == 0xa;
+}
+
 bool is_whitespace(char c) {
-  return c == ' ' || c == '\t' || c == 0xd || c == 0xa;
+  return c == ' ' || c == '\t' || is_newline(c);
 }
 
 bool is_alphabet(char c) {
@@ -177,9 +181,44 @@ bool scan_spec(FILE* f) {
   }
 }
 
+// Single line comment
+bool scan_sc(FILE* f) {
+  static const char* sc_symbol = "//";
+  char buf[strlen(sc_symbol) + 1];
+  memset(buf, 0x00, sizeof(buf));
+
+  fgets(buf, sizeof(buf), f);
+  if (!strcmp(sc_symbol, buf)) {
+    ungets(buf, f); // put // back to ifstream
+    char content[SC_MAX_LEN] = {0};
+    size_t current = 0;
+
+    // Read until newline or EOF
+    char c = 0x00;
+    do {
+      c = fgetc(f);
+      content[current++] = c;
+    } while (!is_newline(c) && c != EOF);
+    content[current - 1] = 0x00;
+    printf("SC: %s\n", content);
+    return true;
+  } else {
+    ungets(buf, f);
+    return false;
+  }
+}
+
+// Multi line comment
+bool scan_mc(FILE* f) {
+
+}
+
 
 bool get_next_token(FILE* f) {
-  bool result = scan_spec(f);
+  bool result = scan_sc(f);
+  if (result) return true;
+
+  result = scan_spec(f);
   if (result) return true;
 
   result = scan_rewd(f);
@@ -193,7 +232,7 @@ bool get_next_token(FILE* f) {
 
   result = scan_inte(f);
   if (result) return true;
-
+  
   return false;
 }
 

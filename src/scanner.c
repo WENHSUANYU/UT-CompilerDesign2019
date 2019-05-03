@@ -27,6 +27,7 @@
 #define IDEN_MAX_LEN 32
 #define REWD_MAX_LEN 9
 #define INTE_MAX_LEN 12
+#define OPER_MAX_LEN 3
 
 char fpeek(FILE* f) {
   char c = fgetc(f);
@@ -78,7 +79,7 @@ bool scan_iden(FILE* f) {
     ungetc(c, f);
     str[current - 1] = 0x00;
     //printf("current offset: %ld\t", ftell(f));
-    printf("IDEN:%s\n", str);
+    printf("IDEN: %s\n", str);
     return true;
   } else {
     return false;
@@ -87,30 +88,23 @@ bool scan_iden(FILE* f) {
 
 // Reserved word
 bool scan_rewd(FILE* f) {
-  static const char rewds[25][REWD_MAX_LEN] = {
+  static const char rewds[][REWD_MAX_LEN] = {
     "if", "else", "while", "for", "do", "switch", "case", "default",
     "continue", "int", "float", "double", "char", "break", "static",
     "extern", "auto", "register", "sizeof", "union", "struct", "enum",
     "return", "goto", "const"
   };
   static const size_t rewds_size = sizeof(rewds) / sizeof(rewds[0]);
-  //printf("rewd array size: %ld\n", rewds_size);
   
   for (size_t i = 0; i < rewds_size; i++) {
     const char* rewd = rewds[i];
-    size_t rewd_size = strlen(rewd);
+    const size_t rewd_size = strlen(rewd);
 
     char buf[rewd_size + 1];
-    memset(buf, 0x00, sizeof(char) * sizeof(buf));
+    memset(buf, 0x00, rewd_size + 1);
 
-    if (!fgets(buf, rewd_size + 1, f)) {
-      // EOF will fail to fgets anymore
-      return false;
-    }
-
-   
-    if (!strcmp(buf, rewd)) {
-      printf("REWD:%s\n", buf);
+    if (fgets(buf, sizeof(buf), f) && !strcmp(buf, rewd)) {
+      printf("REWD: %s\n", buf);
       return true;
     } else {
       ungets(buf, f);
@@ -136,11 +130,38 @@ bool scan_inte(FILE* f) {
     // Backtrack
     ungetc(c, f);
     str[current - 1] = 0x00;
-    printf("INTE:%s\n", str);
+    printf("INTE: %s\n", str);
     return true;
   } else {
     return false;
   }
+}
+
+// Operator
+bool scan_operator(FILE* f) {
+  static const char opers[][OPER_MAX_LEN] = {
+    ">>", "<<", "++", "--", "+=", "-=", "*=", "/=", "%=", "&&", "||",
+    "->", "==", ">=", "<=", "!=",
+    "+", "-", "*", "/", "=", ",", "%", "!", "&", "[", "]", "|", "^",
+    ".", ">", "<", ":", "?"
+  };
+  static const size_t opers_size = sizeof(opers) / sizeof(opers[0]);
+  
+  for (size_t i = 0; i < opers_size; i++) {
+    const char* oper = opers[i];
+    const size_t oper_size = strlen(oper);
+
+    char buf[oper_size + 1];
+    memset(buf, 0x00, oper_size + 1);
+
+    if (fgets(buf, sizeof(buf), f) && !strcmp(buf, oper)) {
+      printf("OPER: %s\n", buf);
+      return true;
+    } else {
+      ungets(buf, f);
+    }
+  }
+  return false;
 }
 
 // Special symbol
@@ -148,7 +169,7 @@ bool scan_spec(FILE* f) {
   char c = fpeek(f);
 
   if (c == '{' || c == '}' || c == '(' || c ==')' || c ==';') {
-    printf("SPEC:%c\n", c);
+    printf("SPEC: %c\n", c);
     fgetc(f);
     return true;
   } else {
@@ -162,6 +183,9 @@ bool get_next_token(FILE* f) {
   if (result) return true;
 
   result = scan_rewd(f);
+  if (result) return true;
+
+  result = scan_operator(f);
   if (result) return true;
   
   result = scan_iden(f);

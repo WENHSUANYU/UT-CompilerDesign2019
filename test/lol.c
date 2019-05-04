@@ -7,7 +7,7 @@ int main() {
    Still another line of comment */
   char c = 'a';
   const char* s = "lolcat";
-  int a = 5;
+  int a = 0xcafebabe;
   float num = .2e2;
   if (100 + 3 == 103) {
 

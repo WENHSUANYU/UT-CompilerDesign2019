@@ -212,23 +212,62 @@ bool scan_inte(FILE* f) {
   char buf[INTE_MAX_LEN] = {0};
   size_t current = 0;
 
+  // 0 -> decimal 0
+  // 234
+  // 0xff -> hex
+  // 023 -> octal
   char c = fgetc(f);
-  if (is_digit(c)) {
-    // dec
-    
-    
-    // hex
-    
-    // octal
+  buf[current++] = c;
 
-    // Advance cursor
-    while (is_digit(c)) {
-      buf[current++] = c;
+  if (is_digit(c)) {
+    if (c == '0') { // hex, octal or decimal 0
       c = fgetc(f);
+      buf[current++] = c;
+      if (c == 'x' || c == 'X') {
+        // Must have at least one hex digit
+        c = fgetc(f);
+        buf[current++] = c;
+        if (!is_hex_digit(c)) { // (hex) first char after 0x is invalid, e.g., 0xp
+          ungets(&buf[current] - 2, f);
+          printf("INTE: 0\n");
+          return true;
+        } else { // (hex) first char after 0x is valid, e.g., 0xff, 0xffp
+          do {
+            c = fgetc(f);
+            buf[current++] = c;
+          } while (is_hex_digit(c));
+          ungetc(c, f);
+          buf[current - 1] = 0x00;
+          printf("INTE: %s\n", buf);
+          return true;
+        }
+      } else if (c >= '0' && c <= '7') { // (octal) first char after 0 is valid
+        do {
+          c = fgetc(f);
+          buf[current++] = c;
+        } while (c >= '0' && c <= '7');
+        ungetc(c, f);
+        buf[current - 1] = 0x00;
+        printf("INTE: %s\n", buf);
+        return true;
+      } else { // (octal / dec 0) first char after 0 is invalid
+        ungetc(c, f);
+        printf("INTE: 0\n");
+        return true;
+      }
+    } else if (c >= '1' && c <= '9') {
+      do {
+        c = fgetc(f);
+        buf[current++] = c;
+      } while (is_digit(c));
+      ungetc(c, f);
+      buf[current - 1] = 0x00;
+      printf("INTE: %s\n", buf);
+      return true;
+    } else {
+      printf("This should never happen...lol\n");
+      return false;
     }
-    ungetc(c, f);
-    printf("INTE: %s\n", buf);
-    return true;
   } else {
     ungetc(c, f);
     return false;
@@ -462,26 +501,24 @@ bool scan_sc(FILE* f) {
 
 // Multi line comment
 bool scan_mc(FILE* f) {
-  static const char* mc_opening_symbol = "/*";
-  static const char* mc_closing_symbol = "*/";
-  char buf[strlen(mc_opening_symbol) + 1];
+  char buf[strlen("/*") + 1];
   memset(buf, 0x00, sizeof(buf));
 
   fgets(buf, sizeof(buf), f);
-  if (!strcmp(mc_opening_symbol, buf)) {
+  if (!strcmp("/*", buf)) {
     // Read until */ is seen
     char c = 0x00;
     do {
       c = fgetc(f);
-      if (c == mc_closing_symbol[0]) { // *
+      if (c == '*') {
         c = fgetc(f);
-        if (c == mc_closing_symbol[1]) { // /
+        if (c == '/') {
           printf("MC: \n");
           return true;
         }
       }
     } while (c != EOF);
-    printf("ERROR: missing %c%c\n", mc_closing_symbol[0], mc_closing_symbol[1]);
+    printf("ERROR: missing */\n");
     return true;
   } else {
     ungets(buf, f);

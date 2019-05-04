@@ -164,7 +164,8 @@ bool scan_char(FILE* f) {
       printf("CHAR: %s\n", buf);
     } else {
       printf("ERROR: missing '\n");
-      ungets(buf, f); // backtrack
+      ungetc(c, f); // backtrack
+      ungets(buf, f);
     }
     return true;
   } else {
@@ -192,7 +193,8 @@ bool scan_str(FILE* f) {
       printf("STR: %s\n", buf);
     } else {
       printf("ERROR: missing \"\n");
-      ungets(buf, f); // backtrack
+      ungetc(c, f); // backtrack
+      ungets(buf, f);
     }
     return true;
   } else {

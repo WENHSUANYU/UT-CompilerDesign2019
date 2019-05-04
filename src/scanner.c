@@ -126,7 +126,6 @@ bool scan_inte(FILE* f) {
       c = fgetc(f);
     }
     ungetc(c, f);
-
     printf("INTE: %s\n", buf);
     return true;
   } else {
@@ -215,6 +214,7 @@ bool scan_flot(FILE* f) {
       // Backtrack to the last accepted state, and
       // clear all data after checkpoint in reverse order
       // e.g., 3.e -> we want to wipe 'e' and leave "3." there
+      ungetc(c, f);
       char* ptr = &buf[current - 1];
       while (ptr > checkpoint) {
         ungetc(*ptr, f);

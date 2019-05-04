@@ -32,12 +32,6 @@
 #define PREP_MAX_LEN 128
 
 
-char fpeek(FILE* f) {
-  char c = fgetc(f);
-  ungetc(c, f);
-  return c;
-}
-
 void ungets(char* s, FILE* f) {
   for (int i = strlen(s) - 1; i >= 0; i--) {
     ungetc(s[i], f);
@@ -81,6 +75,7 @@ bool scan_iden(FILE* f) {
       str[current++] = c;
       c = fgetc(f);
     }
+    ungetc(c, f);
 
     printf("IDEN: %s\n", str);
     return true;
@@ -122,16 +117,16 @@ bool scan_inte(FILE* f) {
   char c = fgetc(f);
 
   if (is_digit(c)) {
-    char str[INTE_MAX_LEN] = {0};
+    char buf[INTE_MAX_LEN] = {0};
     size_t current = 0;
 
     // Advance cursor
     while (is_digit(c)) {
-      str[current++] = c;
+      buf[current++] = c;
       c = fgetc(f);
     }
 
-    printf("INTE: %s\n", str);
+    printf("INTE: %s\n", buf);
     return true;
   } else {
     ungetc(c, f);
@@ -168,6 +163,7 @@ bool scan_char(FILE* f) {
       printf("CHAR: %s\n", buf);
     } else {
       printf("ERROR: missing '\n");
+      //ungets(buf, f); // backtrack
     }
     return true;
   } else {
@@ -195,6 +191,7 @@ bool scan_str(FILE* f) {
       printf("STR: %s\n", buf);
     } else {
       printf("ERROR: missing \"\n");
+      //ungets(buf, f); // backtrack
     }
     return true;
   } else {
@@ -236,7 +233,6 @@ bool scan_spec(FILE* f) {
 
   if (c == '{' || c == '}' || c == '(' || c ==')' || c ==';') {
     printf("SPEC: %c\n", c);
-    fgetc(f);
     return true;
   } else {
     ungetc(c, f);
@@ -325,8 +321,8 @@ bool scan_prep(FILE* f) {
       strcpy(buf + current, "include");
       current += strlen("include");
     } else {
-      ungets(buf + current, f);
       printf("ERROR: expected \"include\"\n");
+      ungets(buf + current, f);
       return false;
     }
 
@@ -398,7 +394,8 @@ int main(int argc, char* args[]) {
   char c = 0x00;
   do {
     get_next_token(fin);
-    c = fpeek(fin);
+    c = fgetc(fin);
+    ungetc(c, fin);
     if (is_whitespace(c)) {
       c = fgetc(fin);
       continue;

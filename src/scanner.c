@@ -25,6 +25,8 @@
 #define IDEN_MAX_LEN 32
 #define REWD_MAX_LEN 9
 #define INTE_MAX_LEN 12
+#define CHAR_MAX_LEN 256
+#define STRING_MAX_LEN 256
 #define OPER_MAX_LEN 3
 #define SC_MAX_LEN 256
 #define PREP_MAX_LEN 128
@@ -137,6 +139,62 @@ bool scan_inte(FILE* f) {
     printf("INTE: %s\n", str);
     return true;
   } else {
+    return false;
+  }
+}
+
+// Float
+
+// Char literal
+bool scan_char(FILE* f) {
+  char c = fgetc(f);
+
+  if (c == '\'') {
+    char buf[CHAR_MAX_LEN] = {0};
+    size_t current = 0;
+
+    // Read until the other ' or newline
+    do {
+      c = fgetc(f);
+      buf[current++] = c;
+    } while (c != '\'' && !is_newline(c));
+    buf[current - 1] = 0x00;
+
+    if (c == '\'') {
+      printf("CHAR: %s\n", buf);
+    } else {
+      printf("ERROR: missing '\n");
+    }
+    return true;
+  } else {
+    ungetc(c, f);
+    return false;
+  }
+}
+
+// String literal
+bool scan_str(FILE* f) {
+  char c = fgetc(f);
+
+  if (c == '"') {
+    char buf[CHAR_MAX_LEN] = {0};
+    size_t current = 0;
+
+    // Read until the other ' or newline
+    do {
+      c = fgetc(f);
+      buf[current++] = c;
+    } while (c != '"' && !is_newline(c));
+    buf[current - 1] = 0x00;
+
+    if (c == '"') {
+      printf("CHAR: %s\n", buf);
+    } else {
+      printf("ERROR: missing \"\n");
+    }
+    return true;
+  } else {
+    ungetc(c, f);
     return false;
   }
 }
@@ -287,11 +345,10 @@ bool scan_prep(FILE* f) {
 
     if (c == closing_symbol) {
       printf("PREP: %s\n", buf);
-      return true;
     } else {
       printf("ERROR: missing %c\n", closing_symbol);
-      return true;
     }
+    return true;
   } else {
     ungetc(c, f);
     return false;
@@ -299,22 +356,22 @@ bool scan_prep(FILE* f) {
 }
 
 
-bool get_next_token(FILE* f) {
-  if (scan_sc(f)) return true;
-  if (scan_mc(f)) return true;
-  if (scan_prep(f)) return true;
-  if (scan_spec(f)) return true;
-  if (scan_rewd(f)) return true;
-  if (scan_oper(f)) return true;
-  if (scan_iden(f)) return true;
-  if (scan_inte(f)) return true;
-
-  return false;
+void get_next_token(FILE* f) {
+  if (scan_sc(f)) return;
+  if (scan_mc(f)) return;
+  if (scan_prep(f)) return;
+  if (scan_spec(f)) return;
+  if (scan_rewd(f)) return;
+  if (scan_char(f)) return;
+  if (scan_str(f)) return;
+  if (scan_oper(f)) return;
+  if (scan_iden(f)) return;
+  if (scan_inte(f)) return;
 }
 
 int main(int argc, char* args[]) {
   if (argc < 2) {
-    printf("usage: \n");
+    printf("usage: %s <c source file>\n", args[0]);
     return EXIT_SUCCESS;
   }
 

@@ -5,9 +5,14 @@ int main() {
   /* this is a multiline comment
    Hahaha
    Still another line of comment */
+  char c = 'a';
+  const char* s = "lolcat";
   int a = 5;
   if (100 + 3 == 103) {
 
+  } else {
+
   }
+
   return 0;
 }

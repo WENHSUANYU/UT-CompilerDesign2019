@@ -8,14 +8,15 @@
 // (ifstream for abbreviation in the following context). For each token class,
 // there's a dedicated tokenizing function.
 //
-// During tokenization, if current character is accepted, then we advance
-// ifstream's position by one char. If not accepted, we keep backtracking
-// ifstream's position by one char until it reaches the original postion
-// or the last acceptable state.
+// During tokenization, if the current character is accepted, then we advance
+// ifstream's position by one char. If not, we backtrack ifstream's position
+// to the last acceptable checkpoint (if possible) or to the original position.
 //
 // In order to get the next token from ifstream, we'll try all tokenizing functions
-// one by one. If after executing a tokenizing function, the position of ifstream
-// remains the same, then we'll try another one until all functions have been tried.
+// one by one (THEIR ORDER MATTERS!). If a tokenizing function returns true,
+// then an acceptable token has been found, and thus we can return immediately.
+// Otherwise (if it returns false) we'll have to try the next tokenizing function
+// until one finally returns true.
  
 #include <stdio.h>
 #include <stdlib.h>
@@ -86,6 +87,7 @@ static bool (*lex[TC_LAST])(FILE* f) = {
   [TC_IDEN] = scan_iden,
   [TC_INTE] = scan_inte
 };
+
 
 void get_next_token(FILE* f) {
   // Iterate through the array of lexing function pointers.

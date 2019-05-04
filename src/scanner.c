@@ -11,7 +11,7 @@
 // During tokenization, if current character is accepted, then we advance
 // ifstream's position by one char. If not accepted, we keep backtracking
 // ifstream's position by one char until it reaches the original postion
-// or an accepted state is reached.
+// or the last acceptable state.
 //
 // In order to get the next token from ifstream, we'll try all tokenizing functions
 // one by one. If after executing a tokenizing function, the position of ifstream

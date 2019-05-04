@@ -27,7 +27,7 @@
 #define INTE_MAX_LEN 12
 #define OPER_MAX_LEN 3
 #define SC_MAX_LEN 256
-#define MC_MAX_LEN 256
+#define PREP_MAX_LEN 128
 
 char fpeek(FILE* f) {
   char c = fgetc(f);
@@ -142,7 +142,7 @@ bool scan_inte(FILE* f) {
 }
 
 // Operator
-bool scan_operator(FILE* f) {
+bool scan_oper(FILE* f) {
   static const char opers[][OPER_MAX_LEN] = {
     ">>", "<<", "++", "--", "+=", "-=", "*=", "/=", "%=", "&&", "||",
     "->", "==", ">=", "<=", "!=",
@@ -211,6 +211,7 @@ bool scan_sc(FILE* f) {
 // Multi line comment
 bool scan_mc(FILE* f) {
   static const char* mc_opening_symbol = "/*";
+  static const char* mc_closing_symbol = "*/";
   char buf[strlen(mc_opening_symbol) + 1];
   memset(buf, 0x00, sizeof(buf));
 
@@ -220,15 +221,15 @@ bool scan_mc(FILE* f) {
     char c = 0x00;
     do {
       c = fgetc(f);
-      if (c == '*') {
+      if (c == mc_closing_symbol[0]) { // *
         c = fgetc(f);
-        if (c == '/') {
+        if (c == mc_closing_symbol[1]) { // /
           printf("MC: \n");
           return true;
         }
       }
     } while (c != EOF);
-    printf("ERROR: missing */\n");
+    printf("ERROR: missing %c%c\n", mc_closing_symbol[0], mc_closing_symbol[1]);
     return true;
   } else {
     ungets(buf, f);
@@ -236,29 +237,78 @@ bool scan_mc(FILE* f) {
   }
 }
 
+// Preprocessor directive
+bool scan_prep(FILE* f) {
+  char buf[PREP_MAX_LEN] = {0};
+  size_t current = 0;
+
+  char c = fgetc(f);
+  if (c == '#') { // #
+    buf[current++] = c;
+
+    // Skip whitespaces between # and include
+    while (is_whitespace(fpeek(f))) {
+      buf[current++] = fgetc(f);
+    }
+    
+    fgets(buf + 1, strlen("include") + 1, f);
+    // Copy "include" to buf
+    if (!strcmp(buf + 1, "include")) {
+      strcpy(buf + 1, "include");
+      current += strlen("include");
+    } else {
+      ungets(buf + 1, f);
+      return false;
+    }
+
+    // Skip whitespaces between include and < or "
+    while (is_whitespace(fpeek(f))) {
+      buf[current++] = fgetc(f);
+    }
+
+    c = fgetc(f);
+    buf[current++] = c;
+    char closing_symbol = 0x00;
+    if (c == '<') { // <
+      closing_symbol = '>';
+    } else if (c == '"') {
+      closing_symbol = '"';
+    } else {
+      ungetc(c, f);
+      printf("ERROR: expected < or \"\n");
+      return true;
+    }
+
+    // Read until closing symbol or newline
+    do {
+      c = fgetc(f);
+      buf[current++] = c;
+    } while (c != closing_symbol && !is_newline(c));
+
+    if (c == closing_symbol) {
+      printf("PREP: %s\n", buf);
+      return true;
+    } else {
+      printf("ERROR: missing %c\n", closing_symbol);
+      return true;
+    }
+  } else {
+    ungetc(c, f);
+    return false;
+  }
+}
+
 
 bool get_next_token(FILE* f) {
-  bool result = scan_sc(f);
-  if (result) return true;
+  if (scan_sc(f)) return true;
+  if (scan_mc(f)) return true;
+  if (scan_prep(f)) return true;
+  if (scan_spec(f)) return true;
+  if (scan_rewd(f)) return true;
+  if (scan_oper(f)) return true;
+  if (scan_iden(f)) return true;
+  if (scan_inte(f)) return true;
 
-  result = scan_mc(f);
-  if (result) return true;
-
-  result = scan_spec(f);
-  if (result) return true;
-
-  result = scan_rewd(f);
-  if (result) return true;
-
-  result = scan_operator(f);
-  if (result) return true;
-  
-  result = scan_iden(f);
-  if (result) return true;
-
-  result = scan_inte(f);
-  if (result) return true;
-  
   return false;
 }
 

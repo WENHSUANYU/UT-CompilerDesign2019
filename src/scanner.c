@@ -211,14 +211,37 @@ bool scan_sc(FILE* f) {
 // Multi line comment
 bool scan_mc(FILE* f) {
   static const char* mc_opening_symbol = "/*";
-  static const char* mc_closing_symbol = "*/";
   char buf[strlen(mc_opening_symbol) + 1];
   memset(buf, 0x00, sizeof(buf));
+
+  fgets(buf, sizeof(buf), f);
+  if (!strcmp(mc_opening_symbol, buf)) {
+    // Read until */ is seen
+    char c = 0x00;
+    do {
+      c = fgetc(f);
+      if (c == '*') {
+        c = fgetc(f);
+        if (c == '/') {
+          printf("MC: \n");
+          return true;
+        }
+      }
+    } while (c != EOF);
+    printf("ERROR: missing */\n");
+    return true;
+  } else {
+    ungets(buf, f);
+    return false;
+  }
 }
 
 
 bool get_next_token(FILE* f) {
   bool result = scan_sc(f);
+  if (result) return true;
+
+  result = scan_mc(f);
   if (result) return true;
 
   result = scan_spec(f);

@@ -2,7 +2,8 @@
 // 
 // Implementation note:
 // 
-// scanner.c converts a sequence of characters into a sequence of tokens.
+// scanner.c is an Ad-Hoc scanner for C-like language which converts a sequence of
+// characters into a sequence of tokens.
 //
 // It contains various functions to get the next token from the input file stream
 // (ifstream for abbreviation in the following context). For each token class,
@@ -62,7 +63,6 @@ bool scan_oper(FILE* f);
 bool scan_iden(FILE* f);
 bool scan_inte(FILE* f);
 
-
 // Utility functions prototypes
 void ungets(char* s, FILE* f);
 bool is_newline(char c);
@@ -71,6 +71,7 @@ bool is_alphabet(char c);
 bool is_digit(char c);
 bool is_underscore(char c);
 bool is_hex_digit(char c);
+
 
 // Array of lex function pointers.
 // get_next_token(FILE* f) will call these functions in the following order.

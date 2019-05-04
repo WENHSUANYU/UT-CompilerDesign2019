@@ -31,6 +31,7 @@
 #define SC_MAX_LEN 256
 #define PREP_MAX_LEN 128
 
+
 char fpeek(FILE* f) {
   char c = fgetc(f);
   ungetc(c, f);
@@ -69,25 +70,22 @@ bool is_underscore(char c) {
 bool scan_iden(FILE* f) {
   // 第一個字必須是英文字母或底線字元
   // 由英文字母、底線及數字組成, 長度不限
-  char c = fpeek(f);
+  char c = fgetc(f);
 
   if (is_alphabet(c) || is_underscore(c)) {
     char str[IDEN_MAX_LEN] = {0};
     size_t current = 0;
 
     // Advance cursor
-    do {
-      c = fgetc(f);
+    while (is_alphabet(c) || is_underscore(c) || is_digit(c)) {
       str[current++] = c;
-    } while (is_alphabet(c) || is_underscore(c) || is_digit(c));
+      c = fgetc(f);
+    }
 
-    // Backtrack
-    ungetc(c, f);
-    str[current - 1] = 0x00;
-    //printf("current offset: %ld\t", ftell(f));
     printf("IDEN: %s\n", str);
     return true;
   } else {
+    ungetc(c, f);
     return false;
   }
 }
@@ -121,29 +119,30 @@ bool scan_rewd(FILE* f) {
 
 // Integer
 bool scan_inte(FILE* f) {
-  char c = fpeek(f);
+  char c = fgetc(f);
 
   if (is_digit(c)) {
     char str[INTE_MAX_LEN] = {0};
     size_t current = 0;
 
     // Advance cursor
-    do {
-      c = fgetc(f);
+    while (is_digit(c)) {
       str[current++] = c;
-    } while (is_digit(c));
+      c = fgetc(f);
+    }
 
-    // Backtrack
-    ungetc(c, f);
-    str[current - 1] = 0x00;
     printf("INTE: %s\n", str);
     return true;
   } else {
+    ungetc(c, f);
     return false;
   }
 }
 
 // Float
+bool scan_flot(FILE* f) {
+  
+}
 
 // Char literal
 bool scan_char(FILE* f) {
@@ -153,12 +152,17 @@ bool scan_char(FILE* f) {
     char buf[CHAR_MAX_LEN] = {0};
     size_t current = 0;
 
-    // Read until the other ' or newline
-    do {
-      c = fgetc(f);
+    c = fgetc(f);
+    while (c != '\'' && !is_newline(c)) {
       buf[current++] = c;
-    } while (c != '\'' && !is_newline(c));
-    buf[current - 1] = 0x00;
+      c = fgetc(f);
+    }
+
+    // If nothing is in single quotes, print error message and return.
+    if (strlen(buf) == 0) {
+      printf("ERROR: expected at least one char literal\n");
+      return true;
+    }
 
     if (c == '\'') {
       printf("CHAR: %s\n", buf);
@@ -180,15 +184,15 @@ bool scan_str(FILE* f) {
     char buf[CHAR_MAX_LEN] = {0};
     size_t current = 0;
 
-    // Read until the other ' or newline
-    do {
-      c = fgetc(f);
+    // Read until the other " or newline
+    c = fgetc(f);
+    while (c != '"' && !is_newline(c)) {
       buf[current++] = c;
-    } while (c != '"' && !is_newline(c));
-    buf[current - 1] = 0x00;
+      c = fgetc(f);
+    }
 
     if (c == '"') {
-      printf("CHAR: %s\n", buf);
+      printf("STR: %s\n", buf);
     } else {
       printf("ERROR: missing \"\n");
     }
@@ -316,6 +320,7 @@ bool scan_prep(FILE* f) {
       current += strlen("include");
     } else {
       ungets(buf + 1, f);
+      printf("ERROR: expected \"include\"\n");
       return false;
     }
 

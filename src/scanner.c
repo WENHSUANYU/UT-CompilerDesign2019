@@ -69,6 +69,10 @@ bool is_whitespace(char c);
 bool is_alphabet(char c);
 bool is_digit(char c);
 bool is_underscore(char c);
+bool is_hex_digit(char c);
+bool is_hex_literal(char* s);
+bool is_octal_digit(char c);
+bool is_octal_literal(char* s);
 
 
 // Array of lex function pointers.
@@ -125,6 +129,32 @@ bool is_underscore(char c) {
   return c == '_';
 }
 
+bool is_hex_digit(char c) {
+  return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+}
+
+bool is_hex_literal(char* s) {
+  // e.g., 0xff2
+  size_t len = strlen(s);
+  if (len <= 2) {
+    return false;
+  }
+  if (s[0] != '0' && (s[1] != 'x' || s[1] != 'X')) {
+    return false;
+  }
+  // Check if all chars after 0x are within 0,1,...e,f
+  for (size_t i = 2; i < len; i++) {
+    if (!is_hex_digit(s[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool is_octal_literal(char* s) {
+
+}
+
 
 // Identifier
 bool scan_iden(FILE* f) {
@@ -179,11 +209,17 @@ bool scan_rewd(FILE* f) {
 
 // Integer
 bool scan_inte(FILE* f) {
-  char c = fgetc(f);
+  char buf[INTE_MAX_LEN] = {0};
+  size_t current = 0;
 
+  char c = fgetc(f);
   if (is_digit(c)) {
-    char buf[INTE_MAX_LEN] = {0};
-    size_t current = 0;
+    // dec
+    
+    
+    // hex
+    
+    // octal
 
     // Advance cursor
     while (is_digit(c)) {
@@ -520,7 +556,6 @@ bool scan_prep(FILE* f) {
     return false;
   }
 }
-
 
 
 int main(int argc, char* args[]) {

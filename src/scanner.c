@@ -382,8 +382,8 @@ scan_str(FILE* f) {
       printf("STR: %s\n", buf);
     } else {
       printf("ERROR: missing \"\n");
-      ungetc(c, f); // backtrack
-      ungets(buf, f);
+      //ungetc(c, f); // backtrack
+      //ungets(buf, f);
     }
     return true;
   } else {
@@ -600,7 +600,7 @@ is_hex_digit(char c) {
 
 static char
 get_escaped_char(char c) {
-  // https://en.wikipedia.org/wiki/Escape_sequences_in_C
+  // According to: https://en.wikipedia.org/wiki/Escape_sequences_in_C
   switch (c) {
     case 'a':
       return 0x07;
@@ -629,7 +629,6 @@ get_escaped_char(char c) {
     case '?':
       return 0x3f;
     default:
-      printf("WARNING: %c is not escaped since no mapping could be found.\n", c);
       return c;
   }
 }
@@ -649,6 +648,7 @@ main(int argc, char* args[]) {
     return EXIT_FAILURE;
   }
 
+  // Main tokenizing loop
   char c = 0x00;
   do {
     get_next_token(fin);

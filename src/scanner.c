@@ -163,7 +163,7 @@ scan_inte(FILE* f) {
   size_t current = 0;
 
   // 0 -> decimal 0
-  // 234
+  // 234 -> decimal 234
   // 0xff -> hex
   // 023 -> octal
   char c = fgetc(f);
@@ -363,6 +363,17 @@ scan_str(FILE* f) {
     // Read until the other " or newline
     c = fgetc(f);
     while (c != '"' && !is_newline(c)) {
+      if (c == '\\') {
+        c = fgetc(f);
+        if (c == '\n') { // multi-line string
+          // Read until next non-whitespace char
+          do {
+            c = fgetc(f);
+          } while (is_whitespace(c));
+        } else { // escape this char
+          c = get_escaped_char(c);
+        }
+      }
       buf[current++] = c;
       c = fgetc(f);
     }

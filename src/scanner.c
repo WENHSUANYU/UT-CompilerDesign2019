@@ -232,13 +232,14 @@ bool scan_oper(FILE* f) {
 
 // Special symbol
 bool scan_spec(FILE* f) {
-  char c = fpeek(f);
+  char c = fgetc(f);
 
   if (c == '{' || c == '}' || c == '(' || c ==')' || c ==';') {
     printf("SPEC: %c\n", c);
     fgetc(f);
     return true;
   } else {
+    ungetc(c, f);
     return false;
   }
 }
@@ -309,27 +310,31 @@ bool scan_prep(FILE* f) {
     buf[current++] = c;
 
     // Skip whitespaces between # and include
-    while (is_whitespace(fpeek(f))) {
-      buf[current++] = fgetc(f);
+    c = fgetc(f);
+    while (is_whitespace(c)) {
+      buf[current++] = c;
+      c = fgetc(f);
     }
+    ungetc(c, f);
     
-    fgets(buf + 1, strlen("include") + 1, f);
+    fgets(buf + current, strlen("include") + 1, f);
     // Copy "include" to buf
-    if (!strcmp(buf + 1, "include")) {
-      strcpy(buf + 1, "include");
+    if (!strcmp(buf + current, "include")) {
+      strcpy(buf + current, "include");
       current += strlen("include");
     } else {
-      ungets(buf + 1, f);
+      ungets(buf + current, f);
       printf("ERROR: expected \"include\"\n");
       return false;
     }
 
     // Skip whitespaces between include and < or "
-    while (is_whitespace(fpeek(f))) {
-      buf[current++] = fgetc(f);
+    c = fgetc(f);
+    while (is_whitespace(c)) {
+      buf[current++] = c;
+      c = fgetc(f);
     }
 
-    c = fgetc(f);
     buf[current++] = c;
     char closing_symbol = 0x00;
     if (c == '<') { // <

@@ -60,7 +60,19 @@ bool scan_oper(FILE* f);
 bool scan_iden(FILE* f);
 bool scan_inte(FILE* f);
 
-// Array of lex function pointers
+void get_next_token();
+
+// Utility functions prototypes
+void ungets(char* s, FILE* f);
+bool is_newline(char c);
+bool is_whitespace(char c);
+bool is_alphabet(char c);
+bool is_digit(char c);
+bool is_underscore(char c);
+
+
+// Array of lex function pointers.
+// get_next_token(FILE* f) will call these functions in the following order.
 static bool (*lex[TC_LAST])(FILE* f) = {
   [TC_SC]   = scan_sc,
   [TC_MC]   = scan_mc,
@@ -74,6 +86,17 @@ static bool (*lex[TC_LAST])(FILE* f) = {
   [TC_IDEN] = scan_iden,
   [TC_INTE] = scan_inte
 };
+
+void get_next_token(FILE* f) {
+  // Iterate through the array of lexing function pointers.
+  // If any lexing function returns true, it means that
+  // a suitable token is found, hence we can return at once.
+  for (size_t i = 0; i < TC_LAST; i++) {
+    if (lex[i](f)) {
+      return;
+    }
+  }
+}
 
 void ungets(char* s, FILE* f) {
   for (int i = strlen(s) - 1; i >= 0; i--) {
@@ -499,16 +522,6 @@ bool scan_prep(FILE* f) {
 }
 
 
-void get_next_token(FILE* f) {
-  // Iterate through the array of lexing function pointers.
-  // If any lexing function returns true, it means that
-  // a suitable token is found, hence we can return at once.
-  for (size_t i = 0; i < TC_LAST; i++) {
-    if (lex[i](f)) {
-      return;
-    }
-  }
-}
 
 int main(int argc, char* args[]) {
   if (argc < 2) {

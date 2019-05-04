@@ -229,7 +229,7 @@ bool scan_inte(FILE* f) {
         printf("INTE: 0\n");
         return true;
       }
-    } else if (c >= '1' && c <= '9') {
+    } else { // c >= '1' && c <= '9'
       do {
         c = fgetc(f);
         buf[current++] = c;
@@ -238,10 +238,7 @@ bool scan_inte(FILE* f) {
       buf[current - 1] = 0x00;
       printf("INTE: %s\n", buf);
       return true;
-    } else {
-      printf("This should never happen...lol\n");
-      return false;
-    }
+    } 
   } else {
     ungetc(c, f);
     return false;

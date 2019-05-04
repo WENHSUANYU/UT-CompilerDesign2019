@@ -32,6 +32,48 @@
 #define SC_MAX_LEN 256
 #define PREP_MAX_LEN 128
 
+typedef enum {
+  TC_SC,   // single-line comment
+  TC_MC,   // multi-line comment
+  TC_PREP, // preprocessor directive
+  TC_SPEC, // special symbol
+  TC_REWD, // reserved word
+  TC_CHAR, // char literal
+  TC_STR,  // string literal
+  TC_FLOT, // float
+  TC_OPER, // operator
+  TC_IDEN, // identifier
+  TC_INTE, // interger literal
+  TC_LAST
+} TokenClass;
+
+// Lex functions prototypes
+bool scan_sc(FILE* f);
+bool scan_mc(FILE* f);
+bool scan_prep(FILE* f);
+bool scan_spec(FILE* f);
+bool scan_rewd(FILE* f);
+bool scan_char(FILE* f);
+bool scan_str(FILE* f);
+bool scan_flot(FILE* f);
+bool scan_oper(FILE* f);
+bool scan_iden(FILE* f);
+bool scan_inte(FILE* f);
+
+// Array of lex function pointers
+static bool (*lex[TC_LAST])(FILE* f) = {
+  [TC_SC]   = scan_sc,
+  [TC_MC]   = scan_mc,
+  [TC_PREP] = scan_prep,
+  [TC_SPEC] = scan_spec,
+  [TC_REWD] = scan_rewd,
+  [TC_CHAR] = scan_char,
+  [TC_STR]  = scan_str,
+  [TC_FLOT] = scan_flot,
+  [TC_OPER] = scan_oper,
+  [TC_IDEN] = scan_iden,
+  [TC_INTE] = scan_inte
+};
 
 void ungets(char* s, FILE* f) {
   for (int i = strlen(s) - 1; i >= 0; i--) {
@@ -186,7 +228,10 @@ bool scan_flot(FILE* f) {
     return false;
   }
 
-  char* checkpoint = &buf[current - 2]; // one char before E|e
+  // one char before E|e
+  // because -1 is 'E' or 'e' (or maybe some other char...)
+  // so -2 is the last accepted state (we'll cache the pointer here)
+  char* checkpoint = &buf[current - 2]; 
 
   // Match (lambda | ((E|e) (+|-|lambda) D+))
   if (c != 'E' && c != 'e') { // lambda
@@ -455,17 +500,14 @@ bool scan_prep(FILE* f) {
 
 
 void get_next_token(FILE* f) {
-  if (scan_sc(f)) return;
-  if (scan_mc(f)) return;
-  if (scan_prep(f)) return;
-  if (scan_spec(f)) return;
-  if (scan_rewd(f)) return;
-  if (scan_char(f)) return;
-  if (scan_str(f)) return;
-  if (scan_flot(f)) return;
-  if (scan_oper(f)) return;
-  if (scan_iden(f)) return;
-  if (scan_inte(f)) return;
+  // Iterate through the array of lexing function pointers.
+  // If any lexing function returns true, it means that
+  // a suitable token is found, hence we can return at once.
+  for (size_t i = 0; i < TC_LAST; i++) {
+    if (lex[i](f)) {
+      return;
+    }
+  }
 }
 
 int main(int argc, char* args[]) {

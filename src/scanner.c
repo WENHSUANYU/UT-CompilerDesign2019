@@ -125,6 +125,7 @@ bool scan_inte(FILE* f) {
       buf[current++] = c;
       c = fgetc(f);
     }
+    ungetc(c, f);
 
     printf("INTE: %s\n", buf);
     return true;
@@ -163,7 +164,7 @@ bool scan_char(FILE* f) {
       printf("CHAR: %s\n", buf);
     } else {
       printf("ERROR: missing '\n");
-      //ungets(buf, f); // backtrack
+      ungets(buf, f); // backtrack
     }
     return true;
   } else {
@@ -191,7 +192,7 @@ bool scan_str(FILE* f) {
       printf("STR: %s\n", buf);
     } else {
       printf("ERROR: missing \"\n");
-      //ungets(buf, f); // backtrack
+      ungets(buf, f); // backtrack
     }
     return true;
   } else {
@@ -322,7 +323,7 @@ bool scan_prep(FILE* f) {
       current += strlen("include");
     } else {
       printf("ERROR: expected \"include\"\n");
-      ungets(buf + current, f);
+      ungets("include", f);
       return false;
     }
 

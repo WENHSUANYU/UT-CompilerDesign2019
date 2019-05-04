@@ -316,9 +316,11 @@ bool scan_prep(FILE* f) {
       c = fgetc(f);
     }
     ungetc(c, f);
-    
+
+    // Try to get "include" from ifstream
     fgets(buf + current, strlen("include") + 1, f);
-    // Copy "include" to buf
+
+    // Copy "include" to buf (if found)
     if (!strcmp(buf + current, "include")) {
       strcpy(buf + current, "include");
       current += strlen("include");
@@ -335,6 +337,7 @@ bool scan_prep(FILE* f) {
       c = fgetc(f);
     }
 
+    // Determine the closing symbol
     buf[current++] = c;
     char closing_symbol = 0x00;
     if (c == '<') { // <
@@ -347,7 +350,7 @@ bool scan_prep(FILE* f) {
       return true;
     }
 
-    // Read until closing symbol or newline
+    // Read until the closing symbol or newline
     do {
       c = fgetc(f);
       buf[current++] = c;

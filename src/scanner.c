@@ -49,6 +49,7 @@ typedef enum {
 } TokenClass;
 
 // Lex functions prototypes
+void get_next_token(FILE* f);
 bool scan_sc(FILE* f);
 bool scan_mc(FILE* f);
 bool scan_prep(FILE* f);
@@ -61,7 +62,6 @@ bool scan_oper(FILE* f);
 bool scan_iden(FILE* f);
 bool scan_inte(FILE* f);
 
-void get_next_token();
 
 // Utility functions prototypes
 void ungets(char* s, FILE* f);
@@ -99,38 +99,6 @@ void get_next_token(FILE* f) {
     }
   }
 }
-
-void ungets(char* s, FILE* f) {
-  for (int i = strlen(s) - 1; i >= 0; i--) {
-    ungetc(s[i], f);
-  }
-}
-
-
-bool is_newline(char c) {
-  return c == 0xd || c == 0xa;
-}
-
-bool is_whitespace(char c) {
-  return c == ' ' || c == '\t' || is_newline(c);
-}
-
-bool is_alphabet(char c) {
-  return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
-}
-
-bool is_digit(char c) {
-  return c >= '0' && c <= '9';
-}
-
-bool is_underscore(char c) {
-  return c == '_';
-}
-
-bool is_hex_digit(char c) {
-  return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
-}
-
 
 // Identifier
 bool scan_iden(FILE* f) {
@@ -565,6 +533,38 @@ bool scan_prep(FILE* f) {
     ungetc(c, f);
     return false;
   }
+}
+
+
+// Utility functions
+void ungets(char* s, FILE* f) {
+  for (int i = strlen(s) - 1; i >= 0; i--) {
+    ungetc(s[i], f);
+  }
+}
+
+bool is_newline(char c) {
+  return c == 0xd || c == 0xa;
+}
+
+bool is_whitespace(char c) {
+  return c == ' ' || c == '\t' || is_newline(c);
+}
+
+bool is_alphabet(char c) {
+  return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+}
+
+bool is_digit(char c) {
+  return c >= '0' && c <= '9';
+}
+
+bool is_underscore(char c) {
+  return c == '_';
+}
+
+bool is_hex_digit(char c) {
+  return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
 }
 
 

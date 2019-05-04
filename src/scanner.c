@@ -77,7 +77,6 @@ bool scan_iden(FILE* f) {
       c = fgetc(f);
     }
     ungetc(c, f);
-
     printf("IDEN: %s\n", str);
     return true;
   } else {
@@ -163,6 +162,7 @@ bool scan_flot(FILE* f) {
     // c should be a decimal point
     if (c != '.') {
       // Let scan_inte() takes care of it
+      ungets(buf, f);
       return false;
     }
 
@@ -187,7 +187,7 @@ bool scan_flot(FILE* f) {
     return false;
   }
 
-  char* checkpoint = buf;
+  char* checkpoint = &buf[current - 2]; // one char before E|e
 
   // Match (lambda | ((E|e) (+|-|lambda) D+))
   if (c != 'E' && c != 'e') { // lambda
@@ -200,27 +200,25 @@ bool scan_flot(FILE* f) {
 
     if (c == '+' || c == '-') {
       buf[current++] = c;
-    } else {
-      ungetc(c, f);
+      c = fgetc(f);
     }
 
     if (is_digit(c)) {
-      do {
-        c = fgetc(f);
+      while (is_digit(c)) {
         buf[current++] = c;
-      } while (is_digit(c));
+        c = fgetc(f);
+      }
       ungetc(c, f);
-      buf[current - 1] = 0x00;
-
       printf("FLOT: %s\n", buf);
       return true;
     } else {
-      // Backtrack to last accepted state, and
+      // Backtrack to the last accepted state, and
       // clear all data after checkpoint in reverse order
-      char* ptr = &buf[current];
-      while (ptr != checkpoint) {
+      // e.g., 3.e -> we want to wipe 'e' and leave "3." there
+      char* ptr = &buf[current - 1];
+      while (ptr > checkpoint) {
         ungetc(*ptr, f);
-        *(checkpoint--) = 0x00;
+        *(ptr--) = 0x00;
       }
       printf("FLOT: %s\n", buf);
       return true;

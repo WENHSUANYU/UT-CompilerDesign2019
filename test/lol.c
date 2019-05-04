@@ -8,7 +8,7 @@ int main() {
   char c = 'a';
   const char* s = "lolcat";
   int a = 5;
-  float num = 32.e10;
+  float num = 3.e;
   if (100 + 3 == 103) {
 
   } else {

@@ -25,6 +25,7 @@
 #define IDEN_MAX_LEN 32
 #define REWD_MAX_LEN 9
 #define INTE_MAX_LEN 12
+#define FLOT_MAX_LEN 64 // not sure @_@
 #define CHAR_MAX_LEN 256
 #define STRING_MAX_LEN 256
 #define OPER_MAX_LEN 3
@@ -137,7 +138,94 @@ bool scan_inte(FILE* f) {
 
 // Float
 bool scan_flot(FILE* f) {
-  
+  char buf[FLOT_MAX_LEN] = {0};
+  size_t current = 0;
+
+  // A single '+' or '-' at the beginning is optional
+  char c = fgetc(f);
+  if (c == '+' || c == '-') {
+    buf[current++] = c;
+  } else {
+    ungetc(c, f);
+  }
+
+  c = fgetc(f);
+  buf[current++] = c;
+
+  // Match (D*.D+ | D+.D*)
+  if (is_digit(c)) { // D+.D*
+    // Keep reading until a decimal point is found
+    do {
+      c = fgetc(f);
+      buf[current++] = c;
+    } while (is_digit(c));
+    
+    // c should be a decimal point
+    if (c != '.') {
+      // Let scan_inte() takes care of it
+      return false;
+    }
+
+    do {
+      c = fgetc(f);
+      buf[current++] = c;
+    } while (is_digit(c));
+  } else if (c == '.') { // D*.D+
+    c = fgetc(f);
+    buf[current++] = c;
+    if (is_digit(c)) {
+      do {
+        c = fgetc(f);
+        buf[current++] = c;
+      } while (is_digit(c));
+    } else {
+      ungets(buf, f);
+      return false;
+    }
+  } else {
+    ungets(buf, f);
+    return false;
+  }
+
+  char* checkpoint = buf;
+
+  // Match (lambda | ((E|e) (+|-|lambda) D+))
+  if (c != 'E' && c != 'e') { // lambda
+    ungetc(c, f); // backtrack
+    buf[--current] = 0x00;
+    printf("FLOT: %s\n", buf);
+    return true;
+  } else { // (+|-|lambda) D+
+    c = fgetc(f);
+
+    if (c == '+' || c == '-') {
+      buf[current++] = c;
+    } else {
+      ungetc(c, f);
+    }
+
+    if (is_digit(c)) {
+      do {
+        c = fgetc(f);
+        buf[current++] = c;
+      } while (is_digit(c));
+      ungetc(c, f);
+      buf[current - 1] = 0x00;
+
+      printf("FLOT: %s\n", buf);
+      return true;
+    } else {
+      // Backtrack to last accepted state, and
+      // clear all data after checkpoint in reverse order
+      char* ptr = &buf[current];
+      while (ptr != checkpoint) {
+        ungetc(*ptr, f);
+        *(checkpoint--) = 0x00;
+      }
+      printf("FLOT: %s\n", buf);
+      return true;
+    }
+  }
 }
 
 // Char literal
@@ -376,6 +464,7 @@ void get_next_token(FILE* f) {
   if (scan_rewd(f)) return;
   if (scan_char(f)) return;
   if (scan_str(f)) return;
+  if (scan_flot(f)) return;
   if (scan_oper(f)) return;
   if (scan_iden(f)) return;
   if (scan_inte(f)) return;

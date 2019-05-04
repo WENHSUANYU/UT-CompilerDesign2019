@@ -34,7 +34,7 @@
 #define SC_MAX_LEN 256
 #define PREP_MAX_LEN 128
 
-typedef enum {
+enum {
   TC_SC,   // single-line comment
   TC_MC,   // multi-line comment
   TC_PREP, // preprocessor directive
@@ -47,30 +47,31 @@ typedef enum {
   TC_IDEN, // identifier
   TC_INTE, // interger literal
   TC_LAST
-} TokenClass;
+};
 
 // Lex functions prototypes
-void get_next_token(FILE* f);
-bool scan_sc(FILE* f);
-bool scan_mc(FILE* f);
-bool scan_prep(FILE* f);
-bool scan_spec(FILE* f);
-bool scan_rewd(FILE* f);
-bool scan_char(FILE* f);
-bool scan_str(FILE* f);
-bool scan_flot(FILE* f);
-bool scan_oper(FILE* f);
-bool scan_iden(FILE* f);
-bool scan_inte(FILE* f);
+static void get_next_token(FILE* f);
+static bool scan_sc(FILE* f);
+static bool scan_mc(FILE* f);
+static bool scan_prep(FILE* f);
+static bool scan_spec(FILE* f);
+static bool scan_rewd(FILE* f);
+static bool scan_char(FILE* f);
+static bool scan_str(FILE* f);
+static bool scan_flot(FILE* f);
+static bool scan_oper(FILE* f);
+static bool scan_iden(FILE* f);
+static bool scan_inte(FILE* f);
 
 // Utility functions prototypes
-void ungets(char* s, FILE* f);
-bool is_newline(char c);
-bool is_whitespace(char c);
-bool is_alphabet(char c);
-bool is_digit(char c);
-bool is_underscore(char c);
-bool is_hex_digit(char c);
+static void ungets(char* s, FILE* f);
+static bool is_newline(char c);
+static bool is_whitespace(char c);
+static bool is_alphabet(char c);
+static bool is_digit(char c);
+static bool is_underscore(char c);
+static bool is_hex_digit(char c);
+static char get_escaped_char(char c);
 
 
 // Array of lex function pointers.
@@ -90,7 +91,8 @@ static bool (*lex[TC_LAST])(FILE* f) = {
 };
 
 
-void get_next_token(FILE* f) {
+static void
+get_next_token(FILE* f) {
   // Iterate through the array of lexing function pointers.
   // If any lexing function returns true, it means that
   // a suitable token is found, hence we can return at once.
@@ -102,7 +104,8 @@ void get_next_token(FILE* f) {
 }
 
 // Identifier
-bool scan_iden(FILE* f) {
+static bool
+scan_iden(FILE* f) {
   // 第一個字必須是英文字母或底線字元
   // 由英文字母、底線及數字組成, 長度不限
   char c = fgetc(f);
@@ -126,7 +129,8 @@ bool scan_iden(FILE* f) {
 }
 
 // Reserved word
-bool scan_rewd(FILE* f) {
+static bool
+scan_rewd(FILE* f) {
   static const char rewds[][REWD_MAX_LEN] = {
     "if", "else", "while", "for", "do", "switch", "case", "default",
     "continue", "int", "float", "double", "char", "break", "static",
@@ -153,7 +157,8 @@ bool scan_rewd(FILE* f) {
 }
 
 // Integer
-bool scan_inte(FILE* f) {
+static bool
+scan_inte(FILE* f) {
   char buf[INTE_MAX_LEN] = {0};
   size_t current = 0;
 
@@ -217,7 +222,8 @@ bool scan_inte(FILE* f) {
 }
 
 // Float
-bool scan_flot(FILE* f) {
+static bool
+scan_flot(FILE* f) {
   char buf[FLOT_MAX_LEN] = {0};
   size_t current = 0;
 
@@ -312,7 +318,8 @@ bool scan_flot(FILE* f) {
 }
 
 // Char literal
-bool scan_char(FILE* f) {
+static bool
+scan_char(FILE* f) {
   char c = fgetc(f);
 
   if (c == '\'') {
@@ -346,13 +353,13 @@ bool scan_char(FILE* f) {
 }
 
 // String literal
-bool scan_str(FILE* f) {
+static bool
+scan_str(FILE* f) {
+  char buf[CHAR_MAX_LEN] = {0};
+  size_t current = 0;
+
   char c = fgetc(f);
-
   if (c == '"') {
-    char buf[CHAR_MAX_LEN] = {0};
-    size_t current = 0;
-
     // Read until the other " or newline
     c = fgetc(f);
     while (c != '"' && !is_newline(c)) {
@@ -375,7 +382,8 @@ bool scan_str(FILE* f) {
 }
 
 // Operator
-bool scan_oper(FILE* f) {
+static bool
+scan_oper(FILE* f) {
   static const char opers[][OPER_MAX_LEN] = {
     ">>", "<<", "++", "--", "+=", "-=", "*=", "/=", "%=", "&&", "||",
     "->", "==", ">=", "<=", "!=",
@@ -402,7 +410,8 @@ bool scan_oper(FILE* f) {
 }
 
 // Special symbol
-bool scan_spec(FILE* f) {
+static bool
+scan_spec(FILE* f) {
   char c = fgetc(f);
 
   if (c == '{' || c == '}' || c == '(' || c ==')' || c ==';') {
@@ -415,7 +424,8 @@ bool scan_spec(FILE* f) {
 }
 
 // Single line comment
-bool scan_sc(FILE* f) {
+static bool
+scan_sc(FILE* f) {
   static const char* sc_symbol = "//";
   char buf[strlen(sc_symbol) + 1];
   memset(buf, 0x00, sizeof(buf));
@@ -442,7 +452,8 @@ bool scan_sc(FILE* f) {
 }
 
 // Multi line comment
-bool scan_mc(FILE* f) {
+static bool
+scan_mc(FILE* f) {
   char buf[strlen("/*") + 1];
   memset(buf, 0x00, sizeof(buf));
 
@@ -469,7 +480,8 @@ bool scan_mc(FILE* f) {
 }
 
 // Preprocessor directive
-bool scan_prep(FILE* f) {
+static bool
+scan_prep(FILE* f) {
   char buf[PREP_MAX_LEN] = {0};
   size_t current = 0;
 
@@ -538,38 +550,82 @@ bool scan_prep(FILE* f) {
 
 
 // Utility functions
-void ungets(char* s, FILE* f) {
+static void
+ungets(char* s, FILE* f) {
   for (int i = strlen(s) - 1; i >= 0; i--) {
     ungetc(s[i], f);
   }
 }
 
-bool is_newline(char c) {
+static bool
+is_newline(char c) {
   return c == 0xd || c == 0xa;
 }
 
-bool is_whitespace(char c) {
+static bool
+is_whitespace(char c) {
   return c == ' ' || c == '\t' || is_newline(c);
 }
 
-bool is_alphabet(char c) {
+static bool
+is_alphabet(char c) {
   return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 }
 
-bool is_digit(char c) {
+static bool
+is_digit(char c) {
   return c >= '0' && c <= '9';
 }
 
-bool is_underscore(char c) {
+static bool
+is_underscore(char c) {
   return c == '_';
 }
 
-bool is_hex_digit(char c) {
+static bool
+is_hex_digit(char c) {
   return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
 }
 
+static char
+get_escaped_char(char c) {
+  // https://en.wikipedia.org/wiki/Escape_sequences_in_C
+  switch (c) {
+    case 'a':
+      return 0x07;
+    case 'b':
+      return 0x08;
+    case 'e':
+      return 0x1b;
+    case 'f':
+      return 0x0c;
+    case 'n':
+      // Only maps to 0xa in memory. Translation to 0xd 0xa on DOS/Windows
+      // happens when writing to a file or stdout.
+      return 0x0a;
+    case 'r':
+      return 0x0d;
+    case 't':
+      return 0x09;
+    case 'v':
+      return 0x0b;
+    case '\\':
+      return 0x5c;
+    case '\'':
+      return 0x27;
+    case '"':
+      return 0x22;
+    case '?':
+      return 0x3f;
+    default:
+      printf("WARNING: %c is not escaped since no mapping could be found.\n", c);
+      return c;
+  }
+}
 
-int main(int argc, char* args[]) {
+
+int
+main(int argc, char* args[]) {
   if (argc < 2) {
     printf("usage: %s <c source file>\n", args[0]);
     return EXIT_SUCCESS;

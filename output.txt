@@ -1,0 +1,29 @@
+IDEN: main
+SPEC: (
+SPEC: )
+SPEC: {
+REWD: if
+SPEC: (
+INTE: 1
+OPER: <
+INTE: 2
+SPEC: )
+IDEN: a
+OPER: =
+FLOT: 1.0
+REWD: else
+IDEN: a
+OPER: =
+FLOT: 1.0
+IDEN: e
+OPER: -
+IDEN: n
+SPEC: ;
+IDEN: subr
+SPEC: (
+CHAR: aa
+OPER: ,
+STR: aaaaaa ERROR: missing "
+IDEN: aaaaaa
+STR: ); ERROR: missing "
+MC: ERROR: missing */

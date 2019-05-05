@@ -58,7 +58,6 @@ typedef struct {
   int line_number;
 } FileReader;
 
-FileReader* new_FileReader(FILE* fin);
 char frgetc(FileReader* self);
 char* frgets(FileReader* self, char* buf, size_t size);
 void frungetc(FileReader* self, char c);
@@ -116,10 +115,7 @@ char* frgets(FileReader* self, char* buf, size_t size) {
 
 void frungetc(FileReader* self, char c) {
   ungetc(c, self->fin);
-  if (is_newline(c)) {
-    self->line_number--;
-    printf("line number: %d\n", self->line_number);
-  }
+  self->line_number -= (is_newline(c)) ? 1 : 0;
 }
 
 void frungets(FileReader* self, const char* s) {
@@ -582,7 +578,7 @@ scan_prep(FileReader* fr, FILE* fout) {
       current += strlen("include");
     } else {
       fprintf(fout, "%d\tPREP\t%s\tERROR: expected \"include\"\n", fr->line_number, buf);
-      frungets(fr, buf);
+      frungets(fr, "include");
       return false;
     }
 
@@ -726,7 +722,9 @@ main(int argc, char* args[]) {
 
 
   // Main tokenizing loop
-  FileReader* fr = new_FileReader(fin);
+  FileReader* fr = (FileReader*) malloc(sizeof(FileReader));
+  fr->fin = fin;
+  fr->line_number = 1;
   char c = 0x00;
 
   do {
@@ -745,8 +743,11 @@ main(int argc, char* args[]) {
     }
   } while (c != EOF);
 
+  // Clean up
   fclose(fin);
   fclose(fout);
+  free(fr);
+
   printf("Output has been written to: %s\n", output_filename);
   return EXIT_SUCCESS;
 }

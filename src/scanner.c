@@ -381,6 +381,9 @@ scan_char(FileReader* fr, FILE* fout) {
 
     c = frgetc(fr);
     while (c != '\'' && !is_newline(c)) {
+      if (c == '\\') {
+        c = get_escaped_char(frgetc(fr));
+      }
       buf[current++] = c;
       c = frgetc(fr);
     }
@@ -621,6 +624,10 @@ scan_prep(FileReader* fr, FILE* fout) {
       c = frgetc(fr);
       buf[current++] = c;
     } while (c != closing_symbol && !is_newline(c));
+
+    if (is_newline(c)) {
+      buf[current - 1] = 0x00;
+    }
 
     if (c == closing_symbol) {
       fprintf(fout, "%d\tPREP\t%s\n", fr->line_number, buf);

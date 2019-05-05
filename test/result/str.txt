@@ -1,0 +1,5 @@
+1	STR	hello world
+2	STR	newline here
+wow
+3	STR	contains	tab	s
+4-6	STR	multi-linestring	tab herevery cool

@@ -1,0 +1,11 @@
+1	PREP	#include<stdio.h>
+2	PREP	#include <stdio.h>
+3	PREP	# include <stdlib.h>
+4	PREP	#    include   <stdlib.h>
+5	PREP	# include  <stdlib.h>
+6	PREP	#include"stdlib.h"
+7	PREP	#include "stdlib.h"
+8	PREP	# include "stdio.h"
+9	PREP	#   include  "stdlib.h"
+11	PREP	#include <stdlib.h	ERROR: missing >
+12	PREP	#include "stdlib.h	ERROR: missing "

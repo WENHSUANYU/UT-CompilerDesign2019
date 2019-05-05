@@ -1,0 +1,2 @@
+1	SC	// A single line comment
+2	SC	//a Single line comment

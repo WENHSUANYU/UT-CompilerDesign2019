@@ -1,0 +1,7 @@
+1	CHAR	c
+2	CHAR	a
+3	CHAR	
+
+4	CHAR		
+5	CHAR	widechar
+7	CHAR	o	ERROR: missing '

@@ -1,0 +1,9 @@
+1	IDEN	some_interesting_var
+2	IDEN	v
+3	IDEN	aa66
+4	IDEN	_wow
+5	IDEN	lol_cat
+6	IDEN	__hi__
+7	IDEN	a_ha__
+8	INTE	25
+8	IDEN	aaa

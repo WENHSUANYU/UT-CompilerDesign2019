@@ -90,13 +90,6 @@ static bool is_hex_digit(char c);
 static char get_escaped_char(char c);
 
 
-FileReader* new_FileReader(FILE* fin) {
-  FileReader* fr = (FileReader*) malloc(sizeof(FileReader));
-  fr->fin = fin;
-  fr->line_number = 1;
-  return fr;
-}
-
 char frgetc(FileReader* self) {
   char c =fgetc(self->fin);
   self->line_number += (is_newline(c)) ? 1 : 0;

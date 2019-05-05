@@ -1,7 +1,6 @@
 # Examples
 
-## Preview
-01.c
+## 01.c
 ```
 //This is a sample program file for a C-like simple scanner
 main()
@@ -55,7 +54,7 @@ for (I = 0; I = 100; i++)
 11	PREP	#include <stdio.h>
 ```
 
-02.c
+## 02.c
 ```
 main() {
   if (1 < 2) a = 1.0 else a = 1.0e-n;
@@ -97,7 +96,7 @@ main() {
 5-6	MC	ERROR: missing */
 ```
 
-03.c
+## 03.c
 ```
 #  include   <stdio.h>
 

@@ -421,7 +421,6 @@ scan_str(FileReader* fr, FILE* fout) {
           // Read until next non-whitespace char
           do {
             c = frgetc(fr);
-            //line_number += (is_whitespace(c)) ? 1 : 0;
           } while (is_whitespace(c));
         } else { // escape this char
           c = get_escaped_char(c);
@@ -438,7 +437,7 @@ scan_str(FileReader* fr, FILE* fout) {
         fprintf(fout, "%d\tSTR\t%s\n", fr->line_number, buf);
       }
     } else {
-      if (fr->line_number != begin_line_number) {
+      if (fr->line_number - 1 != begin_line_number) {
         fprintf(fout, "%d-%d\tSTR\t%s\tERROR: missing \"\n", begin_line_number, fr->line_number, buf);
       } else {
         fprintf(fout, "%d\tSTR\t%s\tERROR: missing \"\n", fr->line_number, buf);

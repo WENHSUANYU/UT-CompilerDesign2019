@@ -562,15 +562,15 @@ scan_prep(FileReader* fr, FILE* fout) {
     buf[current++] = c;
 
     // Skip whitespaces between # and include
-    c = frgetc(fr);
-    while (is_whitespace(c)) {
-      buf[current++] = c;
+    do {
       c = frgetc(fr);
-    }
+      buf[current++] = c;
+    } while (is_whitespace(c));
     frungetc(fr, c);
+    buf[current--] = 0x00;
 
     // Try to get "include" from ifstream
-    frgets(fr, buf + current, strlen("include"));
+    frgets(fr, buf + current, strlen("include") + 1);
 
     // Copy "include" to buf (if found)
     if (!strcmp(buf + current, "include")) {

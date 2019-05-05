@@ -1,0 +1,36 @@
+1	SC	//This is a sample program file for a C-like simple scanner
+2	IDEN	main
+2	SPEC	(
+2	SPEC	)
+3	SPEC	{
+4-6	MC
+7	REWD	int
+7	IDEN	i
+7	OPER	,
+7	IDEN	j
+7	OPER	=
+7	INTE	0
+7	SPEC	;
+8	REWD	for
+8	SPEC	(
+8	IDEN	I
+8	OPER	=
+8	INTE	0
+8	SPEC	;
+8	IDEN	I
+8	OPER	=
+8	INTE	100
+8	SPEC	;
+8	IDEN	i
+8	OPER	++
+8	SPEC	)
+9	IDEN	printf
+9	SPEC	(
+9	STR	%d
+
+9	OPER	,
+9	IDEN	i
+9	SPEC	)
+9	SPEC	;
+10	SPEC	}
+11	PREP	#include <stdio.h>

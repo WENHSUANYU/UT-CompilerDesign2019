@@ -35,6 +35,9 @@ int main() {
   TestOutput("test/sc.c", sc_result);
 
   // Test scan_mc()
+  cout << "Testing scan_mc()" << endl;
+  string mc_result = "1-3\tMC\n4\tMC\n5-6\tMC\tERROR: missing */\n";
+  TestOutput("test/mc.c", mc_result);
 
   cout << "All test has passed!" << endl;
 }

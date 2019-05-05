@@ -537,7 +537,11 @@ scan_mc(FileReader* fr, FILE* fout) {
       if (c == '*') {
         c = frgetc(fr);
         if (c == '/') {
-          fprintf(fout, "%d-%d\tMC\n", begin_line_number, fr->line_number);
+          if (fr->line_number == begin_line_number) {
+            fprintf(fout, "%d\tMC\n", fr->line_number);
+          } else {
+            fprintf(fout, "%d-%d\tMC\n", begin_line_number, fr->line_number);
+          }
           return true;
         }
       }
@@ -549,7 +553,11 @@ scan_mc(FileReader* fr, FILE* fout) {
       fr->line_number--;
     }
 
-    fprintf(fout, "%d-%d\tMC: ERROR: missing */\n", begin_line_number, fr->line_number);
+    if (fr->line_number == begin_line_number) {
+      fprintf(fout, "%d\tMC\tERROR: missing */\n", fr->line_number);
+    } else {
+      fprintf(fout, "%d-%d\tMC\tERROR: missing */\n", begin_line_number, fr->line_number);
+    }
     return true;
   } else {
     frungets(fr, buf);

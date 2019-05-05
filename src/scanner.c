@@ -542,7 +542,14 @@ scan_mc(FileReader* fr, FILE* fout) {
         }
       }
     } while (c != EOF);
-    fprintf(fout, "%d-%dMC: ERROR: missing */\n", begin_line_number, fr->line_number);
+
+    // POSIX defines "an actual line" should always ends with a newline
+    // so here we should decrement line number manually.
+    if (c == EOF) {
+      fr->line_number--;
+    }
+
+    fprintf(fout, "%d-%d\tMC: ERROR: missing */\n", begin_line_number, fr->line_number);
     return true;
   } else {
     frungets(fr, buf);

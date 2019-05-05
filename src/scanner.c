@@ -418,10 +418,8 @@ scan_str(FileReader* fr, FILE* fout) {
       if (c == '\\') {
         c = frgetc(fr);
         if (c == '\n') { // multi-line string
-          // Read until next non-whitespace char
-          do {
-            c = frgetc(fr);
-          } while (is_whitespace(c));
+          // Discard current newline char
+          c = frgetc(fr);
         } else { // escape this char
           c = get_escaped_char(c);
         }
@@ -512,7 +510,9 @@ scan_sc(FileReader* fr, FILE* fout) {
       content[current++] = c;
     } while (!is_newline(c) && c != EOF);
     content[current - 1] = 0x00;
-    fprintf(fout, "%d\tSC\t%s\n", fr->line_number, content);
+
+    // Exclude newline on current line, so line_number - 1
+    fprintf(fout, "%d\tSC\t%s\n", fr->line_number - 1, content);
     return true;
   } else {
     frungets(fr, buf);
